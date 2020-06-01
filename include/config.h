@@ -5,6 +5,6 @@
 #ifndef SGM_INCLUDE_CONFIG_H_
 #define SGM_INCLUDE_CONFIG_H_
 
-#define USE_GPU true
+#define USE_GPU false
 
 #endif //SGM_INCLUDE_CONFIG_H_

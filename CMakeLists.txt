@@ -13,9 +13,12 @@ if (USEGPU)
 
     find_package(CUDA 10.2 REQUIRED)
 
-    CUDA_ADD_EXECUTABLE(sgm_cpu src/census_transform.cpp)
+    CUDA_ADD_EXECUTABLE(sgm_cpu
+            main.cpp
+            src/census_transform.cpp)
 else()
     add_executable(sgm_cpu
+            main.cpp
             src/census_transform.cpp)
 endif ()
 
