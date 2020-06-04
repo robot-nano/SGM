@@ -21,7 +21,8 @@ class CensusTransform {
   CensusTransform(int window_height, int window_width);
 
   void inference(uint32 *l_result, uint32 *r_result,
-                 void *img_left, void *img_right);
+                 void *img_left, void *img_right,
+                 int img_rows = 0, int img_cols = 0);
 
  private:
   /**
@@ -31,14 +32,14 @@ class CensusTransform {
    */
   void census_transform_cpu(cv::Mat &img,
                             uint32 *t_result);
-#if USE_GPU
+
   // blockDim.x = blockDim.y = 16
   // | block1        block2      ... blockn|
   // | block(n+1)    block(n+2) ... block2n|
   // |              ...                    |
-  __global__ void census_transform_gpu(uint8 *img, uint8 *result,
-                                       int32 img_rows, int32 img_cols);
-#endif
+  void census_transform_gpu(uint8 *img, uint32 *result,
+                            int32 img_rows, int32 img_cols);
+
 
   int window_height_;
   int window_width_;

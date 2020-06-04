@@ -33,8 +33,9 @@ int main(int argc, char** argv) {
 
   CensusTransform census_transform(window_height, window_width);
 
-  uint32 *census_l = new uint32[(img_left.rows - w_hf_h * 2) * (img_left.cols - w_hf_w * 2) * 4];
-  uint32 *census_r = new uint32[(img_right.rows - w_hf_h * 2) * (img_right.cols - w_hf_w * 2) * 4];
+  int census_size = (img_left.rows - w_hf_h * 2) * (img_left.cols - w_hf_w * 2) * sizeof(uint32);
+  uint32 *census_l = new uint32[census_size];
+  uint32 *census_r = new uint32[census_size];
 #if USE_GPU
     uint8 *cu_img_l, *cu_img_r;
     uint32 *cu_census_l, *cu_census_r;
@@ -50,7 +51,9 @@ int main(int argc, char** argv) {
                img_right.rows * img_right.cols * sizeof(uint8),
                cudaMemcpyHostToDevice);
 
-    census_transform.inference(cu_census_l, cu_census_r, cu_img_l, cu_img_r);
+    census_transform.inference(cu_census_l, cu_census_r, cu_img_l, cu_img_r, img_left.rows, img_left.cols);
+    cudaMemcpy(census_l, cu_census_l, census_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(census_r, cu_census_r, census_size, cudaMemcpyDeviceToHost);
 #else
     census_transform.inference(census_l, census_r, (void*)(&img_left), (void*)(&img_right));
 #endif
