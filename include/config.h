@@ -5,6 +5,7 @@
 #ifndef SGM_INCLUDE_CONFIG_H_
 #define SGM_INCLUDE_CONFIG_H_
 
-#define USE_GPU true
+#define USE_GPU false
+#define MAX_DISPARITY 128
 
 #endif //SGM_INCLUDE_CONFIG_H_

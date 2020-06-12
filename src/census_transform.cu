@@ -12,16 +12,16 @@ __global__ void census_transform_gpu_kernel(
     int32 w_hf_h_, int32 w_hf_w_) {
   // blockDim.x = blockDim.y = 16
   int tidx = blockDim.x * blockIdx.x + threadIdx.x;
-  int tidy = blockDim.y * blockDim.y + threadIdx.y;
+  int tidy = blockDim.y * blockIdx.y + threadIdx.y;
 
-  if ((tidy < img_cols - 2 * w_hf_h_) &&
-      (tidx < img_rows - 2 * w_hf_w_)) {
+  if ((tidy < img_rows - 2 * w_hf_h_) &&
+      (tidx < img_cols - 2 * w_hf_w_)) {
     int center_idx = (tidy + w_hf_h_) * img_cols + tidx + w_hf_w_;
-    int result_idx = tidy * (img_cols - 2 * w_hf_h_) + (tidx - 2 * w_hf_w_);
+    int result_idx = tidy * (img_cols - 2 * w_hf_h_) + tidx;
 
     uint32 census_val = 0u;
-    for (int i = -w_hf_h_; i < w_hf_h_; ++i) {
-      for (int j = -w_hf_w_; j < w_hf_w_; ++j) {
+    for (int32 i = -w_hf_h_; i <= w_hf_h_; ++i) {
+      for (int32 j = -w_hf_w_; j <= w_hf_w_; ++j) {
         census_val <<= 1;
         int idx = (tidy + w_hf_h_ - i) * img_cols + (tidx + w_hf_w_ - j);
         if (img[center_idx] > img[idx])
@@ -69,7 +69,7 @@ void CensusTransform::census_transform_cpu(cv::Mat &img,
         for (int32 ww = -w_hf_w_; ww <= w_hf_w_; ++ww) {
           census_val <<= 1;
           const uint8 gray = img.at<uchar>(i + wh, j + ww);
-          if (gray < gray_center)
+          if (gray_center > gray)
             census_val += 1;
         }
       }
@@ -81,8 +81,8 @@ void CensusTransform::census_transform_cpu(cv::Mat &img,
 
 void CensusTransform::census_transform_gpu(uint8 *img, uint32 *result,
                                            int32 img_rows, int32 img_cols) {
-  int32 gdim_x = (img_cols + 16 - 1) / 16;
-  int32 gdim_y = (img_rows + 16 - 1) / 16;
+  int32 gdim_x = (img_cols - 2 * w_hf_w_ + 16 - 1) / 16;
+  int32 gdim_y = (img_rows - 2 * w_hf_h_ + 16 - 1) / 16;
   dim3 gradDim(gdim_x, gdim_y);
   dim3 blockDim(16, 16);
   census_transform_gpu_kernel<<<gradDim, blockDim>>>(img, result, img_rows, img_cols,

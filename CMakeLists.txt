@@ -16,6 +16,8 @@ if (USEGPU)
 
     CUDA_ADD_LIBRARY(sgm_lib SHARED
             src/census_transform.cu
+            src/compute_cost.cu
+            src/compute_disp.cu
             )
     target_link_libraries(sgm_lib ${CUDA_LIBRARIES})
     CUDA_ADD_EXECUTABLE(sgm main.cpp)
