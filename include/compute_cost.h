@@ -20,6 +20,7 @@ class ComputeCost {
 
  private:
   void compute_cost_cpu();
+  void compute_cost_gpu();
 
   uint16 Hamming32(const uint32& x, const uint32& y);
 

@@ -18,6 +18,7 @@ if (USEGPU)
             src/census_transform.cu
             src/compute_cost.cu
             src/compute_disp.cu
+            src/sgm.cu
             )
     target_link_libraries(sgm_lib ${CUDA_LIBRARIES})
     CUDA_ADD_EXECUTABLE(sgm main.cpp)
@@ -29,3 +30,4 @@ else()
     target_link_libraries(sgm ${OpenCV_LIBS})
 endif ()
 
+CUDA_ADD_EXECUTABLE(temp temp.cu)

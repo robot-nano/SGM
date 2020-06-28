@@ -13,6 +13,7 @@ class ComputeDisparity {
   ComputeDisparity(uint8 *disparity, uint32 height, uint32 width, uint8 *cost);
   void inference();
  private:
+  void compute_disparity_gpu();
   void compute_disparity_cpu();
   uint32 height_, width_;
   uint8 *pDisparity_;

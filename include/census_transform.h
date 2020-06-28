@@ -18,11 +18,12 @@
 
 class CensusTransform {
  public:
-  CensusTransform(int window_height, int window_width);
+  CensusTransform(int32 img_height, int32 img_width,
+                  int window_height, int window_width,
+                  uint32 *census_l, uint32 *census_r);
+  ~CensusTransform();
 
-  void inference(uint32 *l_result, uint32 *r_result,
-                 void *img_left, void *img_right,
-                 int img_rows = 0, int img_cols = 0);
+  void census_inference(void *img_left, void *img_right);
 
  private:
   /**
@@ -40,11 +41,11 @@ class CensusTransform {
   void census_transform_gpu(uint8 *img, uint32 *result,
                             int32 img_rows, int32 img_cols);
 
-
-  int window_height_;
-  int window_width_;
   int w_hf_h_;  // half of window size, window size is odd
   int w_hf_w_;
+
+  uint32 *pCensusL_, *pCensusR_;
+  uint32 imgHeight_, imgWidth_;
 };
 
 #endif //SGM_INCLUDE_CENSUS_TRANSFORM_H_
