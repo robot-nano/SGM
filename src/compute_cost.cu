@@ -5,7 +5,6 @@
 #include "compute_cost.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <opencv2/highgui/highgui.hpp>
 
 __device__ uint8 Hamming32(const uint32& x, const uint32& y) {
   uint8 dist = 0;
@@ -31,7 +30,7 @@ __global__ void compute_cost_kernel(uint8 *cost, uint32 *census_l, uint32 *censu
       if (idx_x < width && idx_y < height) {
         int img_idx = idx_y * width + idx_x;
         int cost_idx = img_idx * max_disp + threadIdx.x;
-        if (idx_x > threadIdx.x) {
+        if (idx_x >= threadIdx.x) {
           cost[cost_idx] = Hamming32(census_l[img_idx], census_r[img_idx - threadIdx.x]);
         }
 

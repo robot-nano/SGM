@@ -39,12 +39,12 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
 
 SGM::~SGM() {
 #if USE_GPU
-//  CudaSafeCall(cudaFree(pImgL_));
-//  CudaSafeCall(cudaFree(pImgR_));
-//  CudaSafeCall(cudaFree(pCensusL_));
-//  CudaSafeCall(cudaFree(pCensusR_));
-//  CudaSafeCall(cudaFree(pCost_));
-//  CudaSafeCall(cudaFree(pDisp_));
+  CudaSafeCall(cudaFree(pImgL_));
+  CudaSafeCall(cudaFree(pImgR_));
+  CudaSafeCall(cudaFree(pCensusL_));
+  CudaSafeCall(cudaFree(pCensusR_));
+  CudaSafeCall(cudaFree(pCost_));
+  CudaSafeCall(cudaFree(pDisp_));
 #else
   delete[] pCensusL_;
   delete[] pCensusR_;
@@ -71,26 +71,11 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
   int c_h = img_l.rows - 2 * w_hf_h_;
   int c_w = img_l.cols - 2 * w_hf_w_;
 
-  uint16 *i_l = new uint16[c_h * c_w];
-  uint16 *i_r = new uint16[c_h * c_w];
 #if USE_GPU
-  uint32 *c_l_u32 = new uint32[c_h * c_w];
-  uint32 *c_r_u32 = new uint32[c_h * c_w];
-  cudaMemcpy(c_l_u32, pCensusL_, c_h * c_w * sizeof(uint32), cudaMemcpyDeviceToHost);
-  cudaMemcpy(c_r_u32, pCensusR_, c_h * c_w * sizeof(uint32), cudaMemcpyDeviceToHost);
-
-  for (int i = 0; i < c_h * c_w; ++i) {
-    i_l[i] = static_cast<uint16>(c_l_u32[i]);
-    i_r[i] = static_cast<uint16>(c_r_u32[i]);
-  }
   uint8 *dis = new uint8[c_h * c_w];
   cudaMemcpy(dis, pDisp_, c_h * c_w * sizeof(uint8), cudaMemcpyDeviceToHost);
   cv::Mat disp(c_h, c_w, CV_8UC1, dis);
 #else
-  for (int i = 0; i < c_h * c_w; ++i) {
-    i_l[i] = static_cast<uint16>(pCensusL_[i]);
-    i_r[i] = static_cast<uint16>(pCensusR_[i]);
-  }
   cv::Mat disp(c_h, c_w, CV_8UC1, pDisp_);
 #endif
 

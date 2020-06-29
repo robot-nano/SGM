@@ -21,11 +21,11 @@ if (USEGPU)
             src/sgm.cu
             )
     target_link_libraries(sgm_lib ${CUDA_LIBRARIES})
-    CUDA_ADD_EXECUTABLE(sgm main.cpp)
+    CUDA_ADD_EXECUTABLE(sgm main.cu)
     target_link_libraries(sgm ${CUDA_LIBRARIES} ${OpenCV_LIBS} sgm_lib)
 else()
     add_executable(sgm
-            main.cpp
+            main.cu
             src/census_transform.cu)
     target_link_libraries(sgm ${OpenCV_LIBS})
 endif ()

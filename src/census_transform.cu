@@ -6,7 +6,6 @@
 #include "census_transform.h"
 #include <cuda.h>
 #include <cuda_runtime.h>
-#include <opencv2/highgui/highgui.hpp>
 
 __global__ void census_transform_gpu_kernel(
     uint8 *img, uint32 *result,
