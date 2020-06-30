@@ -80,5 +80,6 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
 #endif
 
   cv::imshow("disp", disp);
+  cv::imwrite("../img/disp_gpu.png", disp);
   cv::waitKey(0);
 }

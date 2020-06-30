@@ -6,9 +6,9 @@
 #include <algorithm>
 
 __device__ void find_min_128(uint8 *cost, uint32 height, uint32 width) {
-  int idx_x = blockIdx.x * 4 + threadIdx.x;
-  int idx_y = blockIdx.y * 4 + threadIdx.y;
-  int idx = (idx_y * width + idx_x) * 128;
+  unsigned int idx_x = blockIdx.x * 4 + threadIdx.x;
+  unsigned int idx_y = blockIdx.y * 4 + threadIdx.y;
+  unsigned int idx = (idx_y * width + idx_x) * 128;
 
   for (int i = 1; i < 4; ++i) {
     cost[idx + threadIdx.z] = min(cost[idx + threadIdx.z], cost[idx + threadIdx.z + i * blockDim.z]);
@@ -21,18 +21,21 @@ __device__ void find_min_128(uint8 *cost, uint32 height, uint32 width) {
 __global__ void compute_disp_kernel(uint8 *disparity,
                                     uint32 height, uint32 width,
                                     uint8 *cost) {
-  int idx_x = blockIdx.x * 4 + threadIdx.x;
-  int idx_y = blockIdx.y * 4 + threadIdx.y;
+  unsigned int idx_x = blockIdx.x * 4 + threadIdx.x;
+  unsigned int idx_y = blockIdx.y * 4 + threadIdx.y;
 
-  int idx = (idx_y * width + idx_x) * 128;
+  unsigned int idx = (idx_y * width + idx_x) * 128;
+
   if (idx_y < height && idx_x < width) {
-    for (int i = 1; i < 4; ++i) {
-      cost[idx + threadIdx.z] = min(cost[idx + threadIdx.z], cost[idx + threadIdx.z + i * blockDim.z]);
+    uint8 min_val = UINT8_MAX;
+    uint8 best_disp = 0;
+    for (int i = 0; i < MAX_DISPARITY; ++i) {
+      if (min_val > cost[idx + i]) {
+        min_val = cost[idx + i];
+        best_disp = i;
+      }
     }
-    for (int offset = 16; offset >= 1; offset /= 2) {
-      cost[idx + threadIdx.z] = min(cost[idx + threadIdx.z], __shfl_down_sync(MASK, cost[idx + threadIdx.z], offset, 32));
-    }
-    disparity[idx/128] = cost[idx ];
+    disparity[idx/128] = best_disp;
   }
 }
 
@@ -51,11 +54,11 @@ void ComputeDisparity::inference() {
 }
 
 void ComputeDisparity::compute_disparity_gpu() {
-  int grid_dim_y = (height_ + 4 - 1) / 4;
-  int grid_dim_x = (width_  + 4 - 1) / 4;
+  unsigned int grid_dim_x = (width_  + 4 - 1) / 4;
+  unsigned int grid_dim_y = (height_ + 4 - 1) / 4;
 
   dim3 grid_dim(grid_dim_x, grid_dim_y);
-  dim3 block_dim(4, 4, 32);
+  dim3 block_dim(4, 4);
   compute_disp_kernel<<<grid_dim, block_dim>>>(pDisparity_, height_, width_, pCost_);
 }
 
