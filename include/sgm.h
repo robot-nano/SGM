@@ -8,6 +8,7 @@
 #include "integral_types.h"
 #include "census_transform.h"
 #include "compute_cost.h"
+#include "cost_aggregate.h"
 #include "compute_disp.h"
 #include <memory>
 
@@ -21,11 +22,13 @@ class SGM {
  private:
   std::shared_ptr<CensusTransform> pCensusTransform_;
   std::shared_ptr<ComputeCost> pComputeCost_;
+  std::shared_ptr<CostAggregate> pComputeCostAgg_;
   std::shared_ptr<ComputeDisparity> pComputeDisparity_;
 
 
   uint32 *pCensusL_ = nullptr, *pCensusR_ = nullptr;
   uint8 *pCost_;
+  uint8 *pAgg0_;
   uint8 *pDisp_;
 
   int32 w_hf_h_, w_hf_w_;

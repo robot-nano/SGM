@@ -24,6 +24,7 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
   pCensusL_ = new uint32[feature_size];
   pCensusR_ = new uint32[feature_size];
   pCost_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg0_ = new uint8[feature_size * MAX_DISPARITY];
   pDisp_ = new uint8[feature_size];
 #endif
 
@@ -32,8 +33,10 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
   pComputeCost_ = std::shared_ptr<ComputeCost>(
       new ComputeCost(pCost_, pCensusL_, pCensusR_, MAX_DISPARITY,
                       (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
+  pComputeCostAgg_ = std::shared_ptr<CostAggregate>(
+      new CostAggregate(pCost_, pAgg0_, 3, 7, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
   pComputeDisparity_ = std::shared_ptr<ComputeDisparity>(
-      new ComputeDisparity(pDisp_, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_), pCost_));
+      new ComputeDisparity(pDisp_, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_), pAgg0_));
 
 }
 
@@ -66,6 +69,7 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
 #endif
   pCensusTransform_->census_inference(img_left, img_right);
   pComputeCost_->inference();
+  pComputeCostAgg_->inference(img_l);
   pComputeDisparity_->inference();
 
   int c_h = img_l.rows - 2 * w_hf_h_;
@@ -80,6 +84,6 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
 #endif
 
   cv::imshow("disp", disp);
-  cv::imwrite("../img/disp_gpu.png", disp);
+  cv::imwrite("../img/disp.png", disp);
   cv::waitKey(0);
 }

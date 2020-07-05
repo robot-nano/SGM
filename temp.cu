@@ -4,6 +4,7 @@
 
 #include <cuda.h>
 #include <stdio.h>
+#include <algorithm>
 #include <iostream>
 
 #define MASK 0xFFFFFFFF
@@ -25,24 +26,32 @@ __global__ void kernel2(int *a) {
 }
 
 int main() {
-  int a[128];
+  uint32_t *data = new uint32_t[128];
   for (int i = 0; i < 128; ++i) {
-    a[i] = rand() % 1000;
+    data[i] = 128 - i;
   }
-  int min = INT_MAX;
-  for (int i = 0; i < 128; ++i) {
-    if (min > a[i])
-      min = a[i];
-  }
-  std::cout << min << std::endl;
 
-  int *dev_a;
-  cudaMalloc(&dev_a, 128 * sizeof(int));
-  cudaMemcpy(dev_a, a, 128 * sizeof(int), cudaMemcpyHostToDevice);
+  std::cout << *std::min_element(data, data + 128) << std::endl;
 
-  kernel2<<<1, 128>>>(dev_a);
-  int result[128];
-  cudaMemcpy(result, dev_a, 128 * sizeof(int), cudaMemcpyDeviceToHost);
+
+//  int a[128];
+//  for (int i = 0; i < 128; ++i) {
+//    a[i] = rand() % 1000;
+//  }
+//  int min = INT_MAX;
+//  for (int i = 0; i < 128; ++i) {
+//    if (min > a[i])
+//      min = a[i];
+//  }
+//  std::cout << min << std::endl;
+//
+//  int *dev_a;
+//  cudaMalloc(&dev_a, 128 * sizeof(int));
+//  cudaMemcpy(dev_a, a, 128 * sizeof(int), cudaMemcpyHostToDevice);
+//
+//  kernel2<<<1, 128>>>(dev_a);
+//  int result[128];
+//  cudaMemcpy(result, dev_a, 128 * sizeof(int), cudaMemcpyDeviceToHost);
 
 //  std::cout << result[0] << std::endl;
 //  for (int i = 0; i < 128; ++i) {

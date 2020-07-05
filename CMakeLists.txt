@@ -19,6 +19,7 @@ if (USEGPU)
             src/compute_cost.cu
             src/compute_disp.cu
             src/sgm.cu
+            src/cost_aggregate.cu
             )
     target_link_libraries(sgm_lib ${CUDA_LIBRARIES})
     CUDA_ADD_EXECUTABLE(sgm main.cu)

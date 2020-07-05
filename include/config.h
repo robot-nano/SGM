@@ -6,6 +6,6 @@
 #define SGM_INCLUDE_CONFIG_H_
 
 #define USE_GPU false
-#define MAX_DISPARITY 128
+#define MAX_DISPARITY 32
 
 #endif //SGM_INCLUDE_CONFIG_H_
