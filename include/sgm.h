@@ -28,7 +28,9 @@ class SGM {
 
   uint32 *pCensusL_ = nullptr, *pCensusR_ = nullptr;
   uint8 *pCost_;
-  uint8 *pAgg0_;
+  uint8 *pAgg0_, *pAgg1_, *pAgg2_, *pAgg3_;
+  uint8 *pAgg4_, *pAgg5_, *pAgg6_, *pAgg7_;
+  uint16 *pAgg_;
   uint8 *pDisp_;
 
   int32 w_hf_h_, w_hf_w_;

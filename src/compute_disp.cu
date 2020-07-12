@@ -41,9 +41,17 @@ __global__ void compute_disp_kernel(uint8 *disparity,
 
 ComputeDisparity::ComputeDisparity(uint8 *disparity,
                                    uint32 height, uint32 width,
-                                   uint8 *cost)
+                                   uint16 *agg, uint8 *agg0,
+                                   uint8 *agg1, uint8 *agg2,
+                                   uint8 *agg3, uint8 *agg4,
+                                   uint8 *agg5, uint8 *agg6,
+                                   uint8 *agg7)
     : height_(height), width_(width),
-      pDisparity_(disparity), pCost_(cost) {}
+      pDisparity_(disparity), pAgg0_(agg0),
+      pAgg1_(agg1), pAgg2_(agg2),
+      pAgg3_(agg3), pAgg4_(agg4),
+      pAgg5_(agg5), pAgg6_(agg6),
+      pAgg7_(agg7), pAgg_(agg) {}
 
 void ComputeDisparity::inference() {
 #if USE_GPU
@@ -63,7 +71,31 @@ void ComputeDisparity::compute_disparity_gpu() {
 }
 
 void ComputeDisparity::compute_disparity_cpu() {
-  uint8 *cost_ptr = pCost_;
+  for (int32 i = 0; i < height_; ++i) {
+    for (int32 j = 0; j < width_; ++j) {
+      uint16 min_cost = UINT16_MAX;
+      uint16 max_cost = 0;
+      int32 best_disparity = 0;
+
+      for (int32 d = 0; d < MAX_DISPARITY; ++d) {
+        const int32 idx = (i * width_ + j) * MAX_DISPARITY + d;
+        const uint16 cost = pAgg0_[idx] + pAgg1_[idx] + pAgg2_[idx] + pAgg3_[idx];
+        if (min_cost > cost) {
+          min_cost = cost;
+          best_disparity = d;
+        }
+        max_cost = std::max(max_cost, cost);
+      }
+
+      if (max_cost != min_cost) {
+        pDisparity_[i * width_ + j] = best_disparity;
+      } else {
+        pDisparity_[i * width_ + j] = UINT16_MAX;
+      }
+    }
+  }
+
+/*  uint8 *cost_ptr = pCost_;
 
   for (int32 i = 0; i < height_; ++i) {
     for (int32 j = 0; j < width_; ++j) {
@@ -86,5 +118,5 @@ void ComputeDisparity::compute_disparity_cpu() {
         pDisparity_[i * width_ + j] = UINT8_MAX;
       }
     }
-  }
+  }*/
 }

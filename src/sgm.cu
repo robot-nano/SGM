@@ -24,8 +24,23 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
   pCensusL_ = new uint32[feature_size];
   pCensusR_ = new uint32[feature_size];
   pCost_ = new uint8[feature_size * MAX_DISPARITY];
-  pAgg0_ = new uint8[feature_size * MAX_DISPARITY];
   pDisp_ = new uint8[feature_size];
+  pAgg_  = new uint16[feature_size * MAX_DISPARITY];
+  pAgg0_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg1_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg2_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg3_ = new uint8[feature_size * MAX_DISPARITY];
+#if (NUM_PATHS == 8)
+  pAgg4_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg5_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg6_ = new uint8[feature_size * MAX_DISPARITY];
+  pAgg7_ = new uint8[feature_size * MAX_DISPARITY];
+#else
+  pAgg4_ = nullptr;
+  pAgg5_ = nullptr;
+  pAgg6_ = nullptr;
+  pAgg7_ = nullptr;
+#endif
 #endif
 
   pCensusTransform_ = std::shared_ptr<CensusTransform>(
@@ -34,9 +49,15 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
       new ComputeCost(pCost_, pCensusL_, pCensusR_, MAX_DISPARITY,
                       (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
   pComputeCostAgg_ = std::shared_ptr<CostAggregate>(
-      new CostAggregate(pCost_, pAgg0_, 3, 7, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
+      new CostAggregate(pCost_, pAgg0_,
+                        pAgg1_, pAgg2_,
+                        pAgg3_, pAgg4_,
+                        pAgg5_, pAgg6_,
+                        pAgg7_,
+                        10, 150, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
   pComputeDisparity_ = std::shared_ptr<ComputeDisparity>(
-      new ComputeDisparity(pDisp_, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_), pAgg0_));
+      new ComputeDisparity(pDisp_, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_),
+                           pAgg_, pAgg0_, pAgg1_, pAgg2_, pAgg3_, pAgg4_, pAgg5_, pAgg6_, pAgg7_));
 
 }
 
@@ -84,6 +105,6 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
 #endif
 
   cv::imshow("disp", disp);
-  cv::imwrite("../img/disp.png", disp);
+  cv::imwrite("../img/disp_ld.png", disp);
   cv::waitKey(0);
 }
