@@ -32,3 +32,6 @@ else()
 endif ()
 
 CUDA_ADD_EXECUTABLE(temp temp.cu)
+
+add_executable(opencv_temp src/opencv_temp.cpp)
+target_link_libraries(opencv_temp ${OpenCV_LIBS})

@@ -54,7 +54,7 @@ SGM::SGM(int32 img_height, int32 img_width, int32 window_height, int32 window_wi
                         pAgg3_, pAgg4_,
                         pAgg5_, pAgg6_,
                         pAgg7_,
-                        50, 350, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
+                        30, 350, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_)));
   pComputeDisparity_ = std::shared_ptr<ComputeDisparity>(
       new ComputeDisparity(pDisp_, (img_height - 2 * w_hf_h_), (img_width - 2 * w_hf_w_),
                            pAgg_, pAgg0_, pAgg1_, pAgg2_, pAgg3_, pAgg4_, pAgg5_, pAgg6_, pAgg7_));
