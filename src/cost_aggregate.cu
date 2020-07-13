@@ -85,18 +85,18 @@ void CostAggregate::CostAggregateUpDown(bool is_forward, uint8 *img, uint8 *agg)
   const int32 direction = is_forward ? 1 : -1;
   for (int32 w = 0; w < width_; ++w) {
     uint8 *cost_init_idx = (is_forward) ? (pCost_ + w * MAX_DISPARITY)
-                                        : (pCost_ + (height_ - 1) * width_ * MAX_DISPARITY);
+                                        : (pCost_ + ((height_ - 1) * width_ + w) * MAX_DISPARITY);
     uint8 *cost_agg_idx  = (is_forward) ? (agg + w * MAX_DISPARITY)
-                                        : (agg + (height_ - 1) * width_ * MAX_DISPARITY);
-    uint8 *img_idx = (is_forward) ? (img + w + 2)
-                                  : (img + (height_ + 1) * (w + 4));
+                                        : (agg + ((height_ - 1) * width_ + w) * MAX_DISPARITY);
+    uint8 *img_idx = (is_forward) ? (img + (width_ + 4) * 2 +  w + 2)
+                                  : (img + (height_ + 1) * (width_ + 4) + w + 2);
 
     uint8 gray = *img_idx;
     uint8 gray_last = *img_idx;
 
     memcpy(cost_agg_idx, cost_init_idx, MAX_DISPARITY * sizeof(uint8));
     cost_init_idx += direction * width_ * MAX_DISPARITY;
-    img_idx += direction * width_;
+    img_idx += direction * (width_ + 4);
 
     uint8 min_cost_last_path = *std::min_element(cost_agg_idx, cost_agg_idx + MAX_DISPARITY);
 
@@ -125,7 +125,7 @@ void CostAggregate::CostAggregateUpDown(bool is_forward, uint8 *img, uint8 *agg)
 
       cost_init_idx += direction * width_ * MAX_DISPARITY;
       cost_agg_idx += direction * width_ * MAX_DISPARITY;
-      img_idx += direction * width_;
+      img_idx += direction * (width_ + 4);
 
       gray_last = gray;
     }
