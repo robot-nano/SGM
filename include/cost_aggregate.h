@@ -20,6 +20,8 @@ class CostAggregate {
 
   void CostAggregateLeftRight(bool is_forward, uint8 *img, uint8 *pAgg);
   void CostAggregateUpDown(bool is_forward, uint8 *img, uint8 *pAgg);
+  void CostAggregateTL2BR(bool is_forward, uint8 *img, uint8 *pAgg);
+  void CostAggregateBL2TR(bool is_forward, uint8 *img, uint8 *pAgg);
 
  private:
   uint8 *pCost_;

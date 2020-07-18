@@ -7,6 +7,6 @@
 
 #define USE_GPU false
 #define MAX_DISPARITY 64
-#define NUM_PATHS 4
+#define NUM_PATHS 8
 
 #endif //SGM_INCLUDE_CONFIG_H_

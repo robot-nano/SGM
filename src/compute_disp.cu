@@ -79,7 +79,8 @@ void ComputeDisparity::compute_disparity_cpu() {
 
       for (int32 d = 0; d < MAX_DISPARITY; ++d) {
         const int32 idx = (i * width_ + j) * MAX_DISPARITY + d;
-        const uint16 cost = pAgg0_[idx] + pAgg1_[idx] + pAgg2_[idx] + pAgg3_[idx];
+        const uint16 cost = pAgg0_[idx] + pAgg1_[idx] + pAgg2_[idx] + pAgg3_[idx]
+            + pAgg4_[idx] + pAgg5_[idx] + pAgg6_[idx] + pAgg7_[idx];
         if (min_cost > cost) {
           min_cost = cost;
           best_disparity = d;
