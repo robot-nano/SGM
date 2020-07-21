@@ -40,6 +40,9 @@ class CensusTransform {
   // |              ...                    |
   void census_transform_gpu(uint8 *img, uint32 *result,
                             int32 img_rows, int32 img_cols);
+  void census_transform_gpu(const uint8 *img_l, const uint8 *img_r,
+                            uint32 *transform, uint32 *transform2,
+                            const uint32 rows, const uint32 cols);
 
   int w_hf_h_;  // half of window size, window size is odd
   int w_hf_w_;
