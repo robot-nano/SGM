@@ -38,9 +38,7 @@ class CensusTransform {
   // | block1        block2      ... blockn|
   // | block(n+1)    block(n+2) ... block2n|
   // |              ...                    |
-  void census_transform_gpu(uint8 *img, uint32 *result,
-                            int32 img_rows, int32 img_cols);
-  void census_transform_gpu(const uint8 *img_l, const uint8 *img_r,
+  void census_transform_gpu(const uint8 *im, const uint8 *im2,
                             uint32 *transform, uint32 *transform2,
                             const uint32 rows, const uint32 cols);
 

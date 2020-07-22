@@ -7,45 +7,17 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-__global__ void census_transform_gpu_kernel(
-    uint8 *img, uint32 *result,
-    int32 img_rows, int32 img_cols,
-    int32 w_hf_h_, int32 w_hf_w_) {
-  // blockDim.x = blockDim.y = 16
-  int tidx = blockDim.x * blockIdx.x + threadIdx.x;
-  int tidy = blockDim.y * blockIdx.y + threadIdx.y;
+__global__ void census_transform_gpu_kernel(const uint8 *im, const uint8 *im2,
+                                            uint32 *transform, uint32 *transform2,
+                                            const uint32 rows, const uint32 cols) {
+  const uint32 idx = blockIdx.x * blockDim.x + threadIdx.x;
+  const uint32 idy = blockIdx.y * blockDim.y + threadIdx.y;
 
-  if ((tidy < img_rows - 2 * w_hf_h_) &&
-      (tidx < img_cols - 2 * w_hf_w_)) {
-    int center_idx = (tidy + w_hf_h_) * img_cols + tidx + w_hf_w_;
-    int result_idx = tidy * (img_cols - 2 * w_hf_h_) + tidx;
+  const int win_cols = (32 + LEFT * 2); // 32+4*2 = 40
+  const int win_rows = (32 + TOP * 2); // 32+3*2 = 38
 
-    uint32 census_val = 0u;
-    for (int32 i = -w_hf_h_; i <= w_hf_h_; ++i) {
-      for (int32 j = -w_hf_w_; j <= w_hf_w_; ++j) {
-        census_val <<= 1;
-        int idx = (tidy + w_hf_h_ + i) * img_cols + (tidx + w_hf_w_ + j);
-        if (img[center_idx] > img[idx])
-          census_val += 1;
-      }
-    }
-
-    result[result_idx] = census_val;
-  }
-}
-
-__global__ void
-census_transform_gpu_kernel(const uint8 *im, const uint8 *im2,
-                            uint32 *transform, uint32 *transform2,
-                            const uint32 rows, const uint32 cols) {
-  const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-  const int idy = blockIdx.y * blockDim.y + threadIdx.y;
-
-  const int win_cols = (32 + LEFT * 2);   // 32 + 4 * 2 = 40
-  const int win_rows = (32 + TOP * 2);    // 32 + 3 * 2 = 38
-
-  __shared__ uint8 window[win_cols * win_rows];
-  __shared__ uint8 window2[win_cols * win_rows];
+  __shared__ uint8_t window[win_cols * win_rows];
+  __shared__ uint8_t window2[win_cols * win_rows];
 
   const int id = threadIdx.y * blockDim.x + threadIdx.x;
   const int sm_row = id / win_cols;
@@ -57,7 +29,7 @@ census_transform_gpu_kernel(const uint8 *im, const uint8 *im2,
   window[sm_row * win_cols + sm_col] = boundaries ? im[im_row * cols + im_col] : 0;
   window2[sm_row * win_cols + sm_col] = boundaries ? im2[im_row * cols + im_col] : 0;
 
-  // Not enough threads fill window and window2
+  // Not enough threads to fill window and window2
   const int block_size = blockDim.x * blockDim.y;
   if (id < (win_cols * win_rows - block_size)) {
     const int id = threadIdx.y * blockDim.x + threadIdx.x + block_size;
@@ -75,14 +47,53 @@ census_transform_gpu_kernel(const uint8 *im, const uint8 *im2,
   uint32 census = 0;
   uint32 census2 = 0;
   if (idy < rows && idx < cols) {
-    for (int k = 0; k < CENSUS_HEIGHT / 2; ++k) {
-      for (int m = 0; m < CENSUS_WIDTH; ++m) {
-        const uint8 e1 = window[(threadIdx.y + k) * win_cols + threadIdx.x + m];
-        const uint8 e2 = window[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
-        const uint8 i1 = window2[(threadIdx.y + k) * win_cols + threadIdx.x + m];
-        const uint8 i2 = window2[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
+    for (int k = 0; k < CENSUS_HEIGHT / 2; k++) {
+      for (int m = 0; m < CENSUS_WIDTH; m++) {
+        const uint8_t e1 = window[(threadIdx.y + k) * win_cols + threadIdx.x + m];
+        const uint8_t e2 = window[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
+        const uint8_t i1 = window2[(threadIdx.y + k) * win_cols + threadIdx.x + m];
+        const uint8_t i2 = window2[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
+
+        const int shft = k * CENSUS_WIDTH + m;
+        // Compare to the center
+        uint32 tmp = (e1 >= e2);
+        // Shift to the desired position
+        tmp <<= shft;
+        // Add it to its place
+        census |= tmp;
+        // Compare to the center
+        uint32 tmp2 = (i1 >= i2);
+        // Shift to the desired position
+        tmp2 <<= shft;
+        // Add it to its place
+        census2 |= tmp2;
       }
     }
+    if (CENSUS_HEIGHT % 2 != 0) {
+      const int k = CENSUS_HEIGHT / 2;
+      for (int m = 0; m < CENSUS_WIDTH / 2; m++) {
+        const uint8_t e1 = window[(threadIdx.y + k) * win_cols + threadIdx.x + m];
+        const uint8_t e2 = window[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
+        const uint8_t i1 = window2[(threadIdx.y + k) * win_cols + threadIdx.x + m];
+        const uint8_t i2 = window2[(threadIdx.y + 2 * TOP - k) * win_cols + threadIdx.x + 2 * LEFT - m];
+
+        const int shft = k * CENSUS_WIDTH + m;
+        // Compare to the center
+        uint32 tmp = (e1 >= e2);
+        // Shift to the desired position
+        tmp <<= shft;
+        // Add it to its place
+        census |= tmp;
+        // Compare to the center
+        uint32 tmp2 = (i1 >= i2);
+        // Shift to the desired position
+        tmp2 <<= shft;
+        // Add it to its place
+        census2 |= tmp2;
+      }
+    }
+//    transform[idy * cols + idx] = census;
+    transform2[idy * cols + idx] = census2;
   }
 }
 
@@ -100,10 +111,14 @@ CensusTransform::~CensusTransform() {
 
 void CensusTransform::census_inference(void *img_left, void *img_right) {
 #if USE_GPU
-  census_transform_gpu(reinterpret_cast<uint8 *>(img_left),
-                       pCensusL_, imgHeight_, imgWidth_);
-  census_transform_gpu(reinterpret_cast<uint8 *>(img_right),
-                       pCensusR_, imgHeight_, imgWidth_);
+//  census_transform_gpu(reinterpret_cast<uint8 *>(img_left),
+//                       pCensusL_, imgHeight_, imgWidth_);
+//  census_transform_gpu(reinterpret_cast<uint8 *>(img_right),
+//                       pCensusR_, imgHeight_, imgWidth_);
+
+  census_transform_gpu(reinterpret_cast<uint8 *>(img_left), reinterpret_cast<uint8 *>(img_right),
+      pCensusL_, pCensusR_, imgWidth_, imgHeight_);
+
 #else
   census_transform_cpu(*reinterpret_cast<cv::Mat *>(img_left), pCensusL_);
   census_transform_cpu(*reinterpret_cast<cv::Mat *>(img_right), pCensusR_);
@@ -135,18 +150,20 @@ void CensusTransform::census_transform_cpu(cv::Mat &img,
   }
 }
 
-void CensusTransform::census_transform_gpu(uint8 *img, uint32 *result,
-                                           int32 img_rows, int32 img_cols) {
-  int32 grid_dim_x = (img_cols - 2 * w_hf_w_ + 16 - 1) / 16;
-  int32 grid_dim_y = (img_rows - 2 * w_hf_h_ + 16 - 1) / 16;
-  dim3 gradDim(grid_dim_x, grid_dim_y);
-  dim3 blockDim(16, 16);
-  census_transform_gpu_kernel<<<gradDim, blockDim>>>(img, result, img_rows, img_cols,
-                                                     w_hf_h_, w_hf_w_);
-}
-
-void CensusTransform::census_transform_gpu(const uint8 *img_l, const uint8 *img_r,
+void CensusTransform::census_transform_gpu(const uint8 *img_left, const uint8 *img_right,
                                            uint32 *transform, uint32 *transform2,
                                            const uint32 rows, const uint32 cols) {
+  static cudaStream_t stream1;
+  cudaStreamCreate(&stream1);
+  dim3 block_size;
+  block_size.x = 32;
+  block_size.y = 32;
+  dim3 grid_size;
+  grid_size.x = (imgWidth_ + block_size.x - 1) / block_size.x;
+  grid_size.y = (imgHeight_ + block_size.y - 1) / block_size.y;
 
+  census_transform_gpu_kernel<<<grid_size, block_size, 0, stream1>>>(
+      img_left, img_right,
+      pCensusL_, pCensusR_, imgHeight_, imgWidth_);
+  cudaStreamSynchronize(stream1);
 }
