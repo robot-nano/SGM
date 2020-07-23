@@ -87,7 +87,7 @@ void SGM::inference(cv::Mat &img_l, cv::Mat &img_r) {
   void *img_left = (void *) (&img_l);
   void *img_right = (void *) (&img_r);
 #endif
-  pCensusTransform_->census_inference((void*)pImgL_, (void*)pImgR_);
+  pCensusTransform_->census_inference((void*)pImgL_, (void*)pImgR_, pCensusL_, pCensusR_);
 //  img_left = nullptr;
 //  img_right = nullptr;
 //  pComputeCost_->inference();

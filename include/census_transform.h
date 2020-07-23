@@ -23,7 +23,7 @@ class CensusTransform {
                   uint32 *census_l, uint32 *census_r);
   ~CensusTransform();
 
-  void census_inference(void *img_left, void *img_right);
+  void census_inference(void *img_left, void *img_right, uint32 *census_l, uint32 *census_r);
 
  private:
   /**
