@@ -1,25 +1,42 @@
 //
-// Created by wserver on 2020/5/31.
+// Created by wserver on 2020/7/22.
 //
 
-
+#include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include "sgm.h"
+#include "disparity.h"
 
-int main(int argc, char **argv) {
-  int window_height = atoi(argv[1]);
-  int window_width = atoi(argv[2]);
+int main(int argc, char** argv) {
+  uint8_t p1, p2;
+  p1 = atoi(argv[1]);
+  p2 = atoi(argv[2]);
 
-  cv::Mat img_left = cv::imread("/home/wserver/ws/Stereo/SGM/img/im2.png",
-                                cv::IMREAD_GRAYSCALE);
-  cv::Mat img_right = cv::imread("/home/wserver/ws/Stereo/SGM/img/im6.png",
-                                 cv::IMREAD_GRAYSCALE);
-  int rows = img_left.rows / 32 * 32;
-  int cols = img_left.cols / 32 * 32;
-  cv::resize(img_left, img_left, cv::Size(cols, rows));
-  cv::resize(img_right, img_right, cv::Size(cols, rows));
-  SGM sgm(img_left.rows, img_left.cols, window_height, window_width);
-  sgm.inference(img_left, img_right);
+  init_disparity_method(p1, p2);
+
+  cv::Mat im = cv::imread(argv[3]);
+  if (!im.data) {
+    std::cerr << "Couldn't read the file " << argv[3] << std::endl;
+    exit(EXIT_FAILURE);
+  }
+  cv::Mat im2 = cv::imread(argv[4]);
+  if (!im2.data) {
+    std::cerr << "Couldn't read the file " << argv[4] << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  if (im.channels() > 1) {
+    cv::cvtColor(im, im, CV_RGB2GRAY);
+  }
+  if (im2.channels() > 1) {
+    cv::cvtColor(im2, im2, CV_RGB2GRAY);
+  }
+
+  if (im.rows % 4 || im.cols % 4) {
+    cv::resize(im, im, cv::Size(im.cols/4*4, im.rows/4*4));
+    cv::resize(im2, im2, cv::Size(im.cols/4*4, im.rows/4*4));
+  }
+
+  compute_disparity_method(im, im2);
 }

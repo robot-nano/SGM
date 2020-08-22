@@ -1,37 +1,25 @@
 cmake_minimum_required(VERSION 3.0)
-project(SGM)
+project(sgm)
 
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CUDA_FALGS CUDA_NVCC_FLAGS_DEBUG)
+set(CMAKE_CXX_FLAGS "-std=c++11")
+
+list(APPEND CMAKE_PREFIX_PATH "$ENV{CUDA_ROOT}")
+list(APPEND CMAKE_PREFIX_PATH "$ENV{CMAKE_PREFIX_PATH}")
+
+set(DEVICE_COMPILER "nvcc")
+set(CUDA_COMPILER "${DEVICE_COMPILER}" CACHE STRING "Select the device compiler")
+
+set(CUDA_ARCH "20;30;35;37;50;52;60;61;62" CACHE STRING "Set GPU architecture (semicolon separated list, e.g. '-DCUDA_ARCH=20;35;60')")
+find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
+set(LIBS ${LIBS} ${CUDA_LIBRARIES})
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+cuda_add_executable(
+        sgm
+        main.cu disparity.cu debug.cu costs.cu hamming_cost.cu)
 
-
-if (USEGPU)
-    set(DEVICE_COMPILER "nvcc")
-    set(CUDA_COMPILER "${DEVICE_COMPILER}" CACHE STRING "Select the device compiler")
-    set(CUDA_ARCH "20;30;35;37;50;52;60;61;62" CACHE STRING "Set GPU architecture (semicolon separated list, e.g. '-DCUDA_ARCH=20;35;60')")
-
-    find_package(CUDA 10.2 REQUIRED)
-    include_directories(${OpenCV_INCLUDE_DIRS})
-
-    CUDA_ADD_LIBRARY(sgm_lib SHARED
-            src/census_transform.cu
-            src/compute_cost.cu
-            src/compute_disp.cu
-            src/sgm.cu
-            src/cost_aggregate.cu
-            )
-    target_link_libraries(sgm_lib ${CUDA_LIBRARIES})
-    CUDA_ADD_EXECUTABLE(sgm main.cu)
-    target_link_libraries(sgm ${CUDA_LIBRARIES} ${OpenCV_LIBS} sgm_lib)
-else()
-    add_executable(sgm
-            main.cu
-            src/census_transform.cu)
-    target_link_libraries(sgm ${OpenCV_LIBS})
-endif ()
-
-CUDA_ADD_EXECUTABLE(temp temp.cu)
-
-add_executable(opencv_temp src/opencv_temp.cpp)
-target_link_libraries(opencv_temp ${OpenCV_LIBS})
+target_link_libraries(sgm ${OpenCV_LIBS})
