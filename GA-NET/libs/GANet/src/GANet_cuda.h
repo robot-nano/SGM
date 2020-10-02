@@ -1,0 +1,8 @@
+//
+// Created by wserver on 2020/9/6.
+//
+
+#ifndef GACPP_LIBS_GANET_SRC_GANET_CUDA_H_
+#define GACPP_LIBS_GANET_SRC_GANET_CUDA_H_
+
+#endif //GACPP_LIBS_GANET_SRC_GANET_CUDA_H_

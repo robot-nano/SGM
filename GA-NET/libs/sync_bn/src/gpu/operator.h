@@ -1,0 +1,66 @@
+//
+// Created by wserver on 2020/8/25.
+//
+
+#ifndef GANET_SYNC_BN_SRC_GPU_OPERATOR_H_
+#define GANET_SYNC_BN_SRC_GPU_OPERATOR_H_
+
+#include <torch/extension.h>
+#include <vector>
+#include <torch/serialize/tensor.h>
+
+at::Tensor BatchNorm_Forward_CUDA(
+    const at::Tensor input_,
+    const at::Tensor mean_,
+    const at::Tensor std_,
+    const at::Tensor gamma_,
+    const at::Tensor beta_,
+    float eps);
+
+at::Tensor BatchNorm_Forward_Inp_CUDA(
+    const at::Tensor input_,
+    const at::Tensor ex_,
+    const at::Tensor exs_,
+    const at::Tensor gamma_,
+    const at::Tensor beta_,
+    float eps);
+
+std::vector<at::Tensor> BatchNorm_Backward_CUDA(
+    const at::Tensor gradoutput_,
+    const at::Tensor input_,
+    const at::Tensor ex_,
+    const at::Tensor exs_,
+    const at::Tensor gamma_,
+    const at::Tensor beta_,
+    float eps);
+
+std::vector<at::Tensor> BatchNorm_Inp_Backward_CUDA(
+    const at::Tensor gradoutput_,
+    const at::Tensor output_,
+    const at::Tensor ex_,
+    const at::Tensor exs_,
+    const at::Tensor gamma_,
+    const at::Tensor beta_,
+    float eps);
+
+std::vector<at::Tensor> Expectation_Forward_CUDA(
+    const at::Tensor input_);
+
+at::Tensor Expectation_Backward_CUDA(
+    const at::Tensor input_,
+    const at::Tensor gradEx_,
+    const at::Tensor gradExs_);
+
+at::Tensor Expectation_Inp_Backward_CUDA(
+    const at::Tensor gradInput_,
+    const at::Tensor output_,
+    const at::Tensor gradEx_,
+    const at::Tensor gradExs_,
+    const at::Tensor ex_,
+    const at::Tensor exs_,
+    const at::Tensor gamma_,
+    const at::Tensor beta_,
+    float eps);
+
+
+#endif //GANET_SYNC_BN_SRC_GPU_OPERATOR_H_
