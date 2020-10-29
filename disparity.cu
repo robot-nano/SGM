@@ -235,8 +235,8 @@ cv::Mat compute_disparity_method(cv::Mat &left, cv::Mat &right) {
 //  }
   cv::Mat disp_img(rows, cols, CV_8UC1, disp);
   cv::imshow("img", disp_img);
-  cv::imwrite("../img/result.png", disp_img);
-  cv::waitKey(0);
+//  cv::imwrite("../img/result.png", disp_img);
+  cv::waitKey(1);
   return disp_img;
 }
 

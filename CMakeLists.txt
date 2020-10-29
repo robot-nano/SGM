@@ -23,3 +23,9 @@ cuda_add_executable(
         main.cu disparity.cu debug.cu costs.cu hamming_cost.cu)
 
 target_link_libraries(sgm ${OpenCV_LIBS})
+
+cuda_add_executable(temp temp.cu disparity.cu debug.cu costs.cu hamming_cost.cu)
+target_link_libraries(temp ${OpenCV_LIBS})
+
+add_executable(temp2 temp2.cpp)
+target_link_libraries(temp2 ${OpenCV_LIBS})
