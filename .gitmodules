@@ -1,0 +1,3 @@
+[submodule "3rdparty/vcglib"]
+	path = 3rdparty/vcglib
+	url = https://gitee.com/robot-nano/vcglib.git
